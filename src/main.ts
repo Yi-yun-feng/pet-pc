@@ -1,5 +1,4 @@
-import * as PIXI from "pixi.js";
-import { Live2DModel } from "pixi-live2d-display";
+import type * as PIXI from "pixi.js";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { MarkdownConverter } from "../engine/jingshi.js";
@@ -18,9 +17,9 @@ interface ChatEntry {
 }
 const history: ChatEntry[] = [];
 
-// 拖拽窗口（Windows 生效，Linux/Wayland 受限）
+// 拖拽窗口：只点头像（其他区域留给输入/气泡，Windows 生效，Linux/Wayland 受限）
 const appWindow = getCurrentWindow();
-stage.addEventListener("pointerdown", (e) => {
+placeholder.addEventListener("pointerdown", (e) => {
   if (e.button === 0) void appWindow.startDragging();
 });
 
@@ -69,10 +68,13 @@ inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") void send();
 });
 
-// Live2D 渲染（无模型时保留 CSS 占位头像）
+// Live2D 渲染：仅在检测到模型文件时才动态加载（无模型时用 CSS 占位，不引入 pixi/live2d 依赖）
 async function loadLive2D(): Promise<boolean> {
   const resp = await fetch(MODEL_URL, { method: "HEAD" }).catch(() => null);
   if (!resp || !resp.ok) return false;
+
+  const PIXI = await import("pixi.js");
+  const { Live2DModel } = await import("pixi-live2d-display");
 
   const app = new PIXI.Application({
     resizeTo: stage,
