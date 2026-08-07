@@ -4,29 +4,27 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { MarkdownConverter } from "../engine/jingshi.js";
 
-const stage = document.querySelector<HTMLElement>("#stage")!;
-const placeholder = document.querySelector<HTMLDivElement>("#character")!;
+const stage = document.querySelector<HTMLElement>(".stage")!;
+const placeholder = document.querySelector<HTMLDivElement>(".character")!;
 const messagesEl = document.querySelector<HTMLDivElement>("#messages")!;
 const inputEl = document.querySelector<HTMLInputElement>("#input")!;
-const sendBtn = document.querySelector<HTMLButtonElement>("#send")!;
 
 const MODEL_URL = "models/model.model3.json";
 const converter = new MarkdownConverter();
 
-type ChatRole = "user" | "assistant";
 interface ChatEntry {
-  role: ChatRole;
+  role: "user" | "assistant";
   content: string;
 }
 const history: ChatEntry[] = [];
 
-// 拖拽窗口（透明无边框窗口必须手动接管；Windows 生效，Linux/Wayland 受限）
+// 拖拽窗口（Windows 生效，Linux/Wayland 受限）
 const appWindow = getCurrentWindow();
 stage.addEventListener("pointerdown", (e) => {
   if (e.button === 0) void appWindow.startDragging();
 });
 
-function appendBubble(role: ChatRole, text: string) {
+function appendBubble(role: "user" | "assistant", text: string) {
   const el = document.createElement("div");
   el.className = `bubble ${role}`;
   el.textContent = text;
@@ -35,7 +33,6 @@ function appendBubble(role: ChatRole, text: string) {
 }
 
 function setThinking(on: boolean) {
-  sendBtn.disabled = on;
   if (on) {
     const el = document.createElement("div");
     el.className = "bubble assistant thinking";
@@ -50,7 +47,7 @@ function setThinking(on: boolean) {
 
 async function send() {
   const text = inputEl.value.trim();
-  if (!text || sendBtn.disabled) return;
+  if (!text) return;
   inputEl.value = "";
   appendBubble("user", text);
   history.push({ role: "user", content: text });
@@ -68,12 +65,11 @@ async function send() {
   }
 }
 
-sendBtn.addEventListener("click", () => void send());
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") void send();
 });
 
-// Live2D 渲染（无模型时保留 CSS 占位角色）
+// Live2D 渲染（无模型时保留 CSS 占位头像）
 async function loadLive2D(): Promise<boolean> {
   const resp = await fetch(MODEL_URL, { method: "HEAD" }).catch(() => null);
   if (!resp || !resp.ok) return false;

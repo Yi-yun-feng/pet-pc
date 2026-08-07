@@ -9,26 +9,19 @@
   </head>
 
   <body>
-    <div class="layout">
-      <div class="stage" id="stage">
-        <div id="character" class="character">
-          <div class="pet-eye pet-eye-left"></div>
-          <div class="pet-eye pet-eye-right"></div>
-          <div class="pet-mouth"></div>
-          <div class="pet-blush pet-blush-left"></div>
-          <div class="pet-blush pet-blush-right"></div>
-        </div>
-        <canvas id="live2d"></canvas>
-        <div id="pet-name" class="pet-name">JingShi Pet</div>
+    <main class="stage">
+      <div class="character">
+        <div class="pet-eye pet-eye-left"></div>
+        <div class="pet-eye pet-eye-right"></div>
+        <div class="pet-mouth"></div>
+        <div class="pet-blush pet-blush-left"></div>
+        <div class="pet-blush pet-blush-right"></div>
       </div>
-
-      <div class="chat">
-        <div id="messages" class="messages"></div>
-        <div class="input-row">
-          <input id="input" type="text" placeholder="和角色说话…" maxlength="500" />
-          <button id="send" type="button">发送</button>
-        </div>
+      <canvas id="live2d"></canvas>
+      <div id="messages" class="messages"></div>
+      <div class="line-input">
+        <input id="input" type="text" placeholder="…" maxlength="300" />
       </div>
-    </div>
+    </main>
   </body>
 </html>
