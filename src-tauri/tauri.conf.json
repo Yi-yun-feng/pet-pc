@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "JingShi Pet",
-        "width": 260,
-        "height": 460,
+        "width": 200,
+        "height": 360,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,

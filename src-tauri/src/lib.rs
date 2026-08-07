@@ -30,29 +30,38 @@ async fn ask_llm(history: Vec<serde_json::Value>, app: tauri::AppHandle) -> Resu
         .unwrap_or_else(|| "https://api.deepseek.com".into());
     let model = cfg.model.unwrap_or_else(|| "deepseek-v4-flash".into());
 
-    let client = reqwest::Client::new();
-    let resp = client
-        .post(format!("{}/v1/chat/completions", base.trim_end_matches('/')))
-        .bearer_auth(&key)
-        .json(&serde_json::json!({
-            "model": model,
-            "messages": history,
-            "stream": false
-        }))
-        .send()
-        .await
-        .map_err(|e| format!("请求失败: {e}"))?;
+    let url = format!("{}/v1/chat/completions", base.trim_end_matches('/'));
+    let payload = serde_json::json!({
+        "model": model,
+        "messages": history,
+        "stream": false
+    });
 
-    let status = resp.status();
-    let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-    if !status.is_success() {
-        return Err(format!("LLM API {status}: {body}"));
+    // ureq 是阻塞式客户端，放到阻塞线程池跑，避免占用 async worker
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        ureq::post(&url)
+            .set("Authorization", &format!("Bearer {key}"))
+            .send_json(payload)
+    })
+    .await
+    .map_err(|e| format!("任务失败: {e}"))?;
+
+    match result {
+        Ok(resp) => {
+            let status = resp.status();
+            let body: serde_json::Value = resp
+                .into_json()
+                .map_err(|e| format!("响应解析失败: {e}"))?;
+            if status != 200 {
+                return Err(format!("LLM API {status}: {body}"));
+            }
+            body["choices"][0]["message"]["content"]
+                .as_str()
+                .ok_or_else(|| "LLM 响应缺少 content".to_string())
+                .map(|s| s.to_string())
+        }
+        Err(e) => Err(format!("请求失败: {e}")),
     }
-    let text = body["choices"][0]["message"]["content"]
-        .as_str()
-        .ok_or_else(|| "LLM 响应缺少 content".to_string())?
-        .to_string();
-    Ok(text)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

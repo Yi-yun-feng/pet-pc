@@ -26,7 +26,7 @@ body {
 /* 上半：角色区 */
 .stage {
   position: relative;
-  flex: 0 0 55%;
+  flex: 0 0 58%;
   background: transparent;
 }
 
@@ -42,8 +42,8 @@ body {
   left: 50%;
   bottom: 8px;
   transform: translateX(-50%);
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   background: radial-gradient(circle at 35% 30%, #f6e3ff, #cfb7e8 60%, #a78bd0);
   border-radius: 50%;
   box-shadow:
@@ -64,20 +64,20 @@ body {
 
 .pet-eye {
   position: absolute;
-  top: 44px;
-  width: 12px;
-  height: 15px;
+  top: 36px;
+  width: 10px;
+  height: 12px;
   background: #2a2233;
   border-radius: 50%;
   animation: blink 4.5s infinite;
 }
 
 .pet-eye-left {
-  left: 38px;
+  left: 30px;
 }
 
 .pet-eye-right {
-  right: 38px;
+  right: 30px;
 }
 
 @keyframes blink {
@@ -94,29 +94,29 @@ body {
 .pet-mouth {
   position: absolute;
   left: 50%;
-  top: 74px;
+  top: 60px;
   transform: translateX(-50%);
-  width: 20px;
-  height: 9px;
+  width: 16px;
+  height: 7px;
   border-bottom: 3px solid #5b4668;
   border-radius: 0 0 20px 20px;
 }
 
 .pet-blush {
   position: absolute;
-  top: 64px;
-  width: 16px;
-  height: 8px;
+  top: 52px;
+  width: 13px;
+  height: 6px;
   background: rgba(255, 140, 160, 0.45);
   border-radius: 50%;
 }
 
 .pet-blush-left {
-  left: 26px;
+  left: 21px;
 }
 
 .pet-blush-right {
-  right: 26px;
+  right: 21px;
 }
 
 .pet-name {
