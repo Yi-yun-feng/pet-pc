@@ -1,0 +1,124 @@
+:root {
+  font-family: "Inter Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+.live2d {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* CSS 占位角色（未加载 Live2D 模型时显示） */
+.character {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle at 35% 30%, #f6e3ff, #cfb7e8 60%, #a78bd0);
+  border-radius: 50%;
+  box-shadow:
+    inset -12px -14px 30px rgba(80, 50, 120, 0.35),
+    0 10px 30px rgba(60, 40, 100, 0.25);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+.pet-eye {
+  position: absolute;
+  top: 52px;
+  width: 14px;
+  height: 18px;
+  background: #2a2233;
+  border-radius: 50%;
+  animation: blink 4.5s infinite;
+}
+
+.pet-eye-left {
+  left: 44px;
+}
+
+.pet-eye-right {
+  right: 44px;
+}
+
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+.pet-mouth {
+  position: absolute;
+  left: 50%;
+  top: 86px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 10px;
+  border-bottom: 3px solid #5b4668;
+  border-radius: 0 0 22px 22px;
+}
+
+.pet-blush {
+  position: absolute;
+  top: 74px;
+  width: 18px;
+  height: 9px;
+  background: rgba(255, 140, 160, 0.45);
+  border-radius: 50%;
+}
+
+.pet-blush-left {
+  left: 30px;
+}
+
+.pet-blush-right {
+  right: 30px;
+}
+
+.pet-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(60, 45, 90, 0.65);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
+}
