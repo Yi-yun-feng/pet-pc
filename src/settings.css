@@ -1,0 +1,131 @@
+:root {
+  font-family: "Inter Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #1c1b1f;
+  background: #f5f4f7;
+  --bg: #f5f4f7;
+  --surface: #ffffff;
+  --border: #e0dde3;
+  --text: #1c1b1f;
+  --text-dim: #6f6b76;
+  --accent: #6750a4;
+  --accent-text: #fff;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.panel {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.panel-head h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.panel-head span {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+input,
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status {
+  font-size: 12px;
+  color: #2e7d32;
+}
+
+.panel-foot button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.panel-foot button:hover {
+  filter: brightness(1.05);
+}

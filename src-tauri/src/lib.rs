@@ -1,25 +1,63 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tauri::Manager;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::TrayIconBuilder;
 
-#[derive(Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 struct LlmConfig {
     base_url: Option<String>,
     api_key: Option<String>,
     model: Option<String>,
+    character_name: Option<String>,
+    system_prompt: Option<String>,
 }
 
-fn read_config(app: &tauri::AppHandle) -> Result<LlmConfig, String> {
+fn config_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app
         .path()
         .app_config_dir()
         .map_err(|e| format!("无法定位配置目录: {e}"))?;
-    let path = dir.join("config.local.json");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir.join("config.local.json"))
+}
+
+fn read_config(app: &tauri::AppHandle) -> Result<LlmConfig, String> {
+    let path = config_path(app)?;
     if !path.exists() {
-        return Err("未找到 config.local.json，请创建后填入 apiKey（见 README 或 config.local.json.example）".into());
+        return Ok(LlmConfig::default());
     }
     let raw = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
     serde_json::from_str(&raw).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_config(app: tauri::AppHandle) -> Result<LlmConfig, String> {
+    read_config(&app)
+}
+
+#[tauri::command]
+fn save_config(cfg: LlmConfig, app: tauri::AppHandle) -> Result<(), String> {
+    let path = config_path(&app)?;
+    let raw = serde_json::to_string_pretty(&cfg).map_err(|e| e.to_string())?;
+    std::fs::write(&path, raw).map_err(|e| e.to_string())
+}
+
+fn open_settings(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.show();
+        let _ = w.set_focus();
+    } else {
+        let _ = tauri::WebviewWindowBuilder::new(
+            app,
+            "settings",
+            tauri::WebviewUrl::App("settings.html".into()),
+        )
+        .title("JingShi Pet 设置")
+        .inner_size(440.0, 620.0)
+        .resizable(false)
+        .build();
+    }
 }
 
 #[tauri::command]
@@ -31,14 +69,23 @@ async fn ask_llm(history: Vec<serde_json::Value>, app: tauri::AppHandle) -> Resu
         .unwrap_or_else(|| "https://api.deepseek.com".into());
     let model = cfg.model.unwrap_or_else(|| "deepseek-v4-flash".into());
 
+    // 人设/系统提示（用户画像）注入对话开头
+    let mut messages: Vec<serde_json::Value> = Vec::new();
+    if let Some(sp) = cfg.system_prompt.as_deref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        messages.push(serde_json::json!({"role": "system", "content": sp}));
+    }
+    if let Some(name) = cfg.character_name.as_deref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        messages.push(serde_json::json!({"role": "system", "content": format!("你的名字叫 {name}，这是你的角色设定，保持角色扮演。")}));
+    }
+    messages.extend(history);
+
     let url = format!("{}/v1/chat/completions", base.trim_end_matches('/'));
     let payload = serde_json::json!({
         "model": model,
-        "messages": history,
+        "messages": messages,
         "stream": false
     });
 
-    // ureq 是阻塞式客户端，放到阻塞线程池跑，避免占用 async worker
     let result = tauri::async_runtime::spawn_blocking(move || {
         ureq::post(&url)
             .set("Authorization", &format!("Bearer {key}"))
@@ -69,7 +116,28 @@ async fn ask_llm(history: Vec<serde_json::Value>, app: tauri::AppHandle) -> Resu
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![ask_llm])
+        .setup(|app| {
+            let settings_item = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
+            let upload_item = MenuItem::with_id(app, "upload", "更换头像", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&settings_item, &upload_item, &quit_item])?;
+
+            TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("JingShi Pet")
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "settings" => open_settings(app),
+                    "upload" => {
+                        // 预留：选择图片设为头像
+                    }
+                    "quit" => app.exit(0),
+                    _ => {}
+                })
+                .build(app)?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![ask_llm, get_config, save_config])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

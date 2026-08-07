@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/settings.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JingShi Pet 设置</title>
+    <script type="module" src="/src/settings.ts" defer></script>
+  </head>
+
+  <body>
+    <main class="panel">
+      <header class="panel-head">
+        <h1>JingShi Pet</h1>
+        <span>设置</span>
+      </header>
+
+      <section class="group">
+        <h2>角色</h2>
+        <label class="field">
+          <span>名字</span>
+          <input id="characterName" type="text" placeholder="例如：小梦" />
+        </label>
+        <label class="field">
+          <span>人设（System Prompt）</span>
+          <textarea id="systemPrompt" rows="4" placeholder="设定角色的性格、语气、说话方式…"></textarea>
+        </label>
+      </section>
+
+      <section class="group">
+        <h2>大模型（LLM）</h2>
+        <label class="field">
+          <span>API Key</span>
+          <input id="apiKey" type="password" placeholder="sk-…" />
+        </label>
+        <label class="field">
+          <span>模型</span>
+          <input id="model" type="text" placeholder="deepseek-v4-flash" />
+        </label>
+        <label class="field">
+          <span>Base URL</span>
+          <input id="baseUrl" type="text" placeholder="https://api.deepseek.com" />
+        </label>
+      </section>
+
+      <footer class="panel-foot">
+        <span id="status" class="status"></span>
+        <button id="save" type="button">保存</button>
+      </footer>
+    </main>
+  </body>
+</html>
