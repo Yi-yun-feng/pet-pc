@@ -1,0 +1,22 @@
+node_modules/
+dist/
+target/
+*.log
+.DS_Store
+Thumbs.db
+
+# --- 敏感文件防泄露（开源前必查）---
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.p7b
+*.cer
+*.keystore
+*.jks
+credentials*
+secrets*
+config.local.*
+local.properties
+*.local
