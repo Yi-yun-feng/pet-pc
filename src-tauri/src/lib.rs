@@ -2,6 +2,7 @@ use serde::Deserialize;
 use tauri::Manager;
 
 #[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 struct LlmConfig {
     base_url: Option<String>,
     api_key: Option<String>,
