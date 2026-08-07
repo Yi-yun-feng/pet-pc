@@ -1,10 +1,12 @@
 import type * as PIXI from "pixi.js";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { MarkdownConverter } from "../engine/jingshi.js";
 
 const stage = document.querySelector<HTMLElement>(".stage")!;
-const placeholder = document.querySelector<HTMLDivElement>(".character")!;
+const placeholder = document.querySelector<HTMLDivElement>("#character")!;
+const avatarImg = document.querySelector<HTMLImageElement>("#avatar")!;
 const messagesEl = document.querySelector<HTMLDivElement>("#messages")!;
 const inputEl = document.querySelector<HTMLInputElement>("#input")!;
 
@@ -68,6 +70,21 @@ inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") void send();
 });
 
+// 头像：用户上传照片 > CSS 占位角色
+async function refreshAvatar() {
+  const data = await invoke<string>("get_avatar_base64").catch(() => "");
+  if (data) {
+    avatarImg.src = data;
+    avatarImg.style.display = "block";
+    placeholder.style.display = "none";
+  } else {
+    avatarImg.style.display = "none";
+    placeholder.style.display = "block";
+  }
+}
+
+void listen("avatar-updated", () => void refreshAvatar());
+
 // Live2D 渲染：仅在检测到模型文件时才动态加载（无模型时用 CSS 占位，不引入 pixi/live2d 依赖）
 async function loadLive2D(): Promise<boolean> {
   const resp = await fetch(MODEL_URL, { method: "HEAD" }).catch(() => null);
@@ -100,3 +117,4 @@ async function loadLive2D(): Promise<boolean> {
 void loadLive2D().catch(() => {
   // 模型不可用时保留 CSS 占位
 });
+void refreshAvatar();

@@ -31,6 +31,21 @@ body {
   height: 100%;
 }
 
+/* 悬浮头像（用户上传照片） */
+.avatar {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(60, 40, 100, 0.25);
+  display: none;
+  animation: float 3s ease-in-out infinite;
+}
+
 /* 悬浮头像（占位） */
 .character {
   position: absolute;

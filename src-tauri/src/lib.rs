@@ -1,4 +1,6 @@
+use base64::Engine;
 use serde::{Deserialize, Serialize};
+use tauri::Emitter;
 use tauri::Manager;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
@@ -60,6 +62,43 @@ fn open_settings(app: &tauri::AppHandle) {
     }
 }
 
+fn pick_avatar(app: &tauri::AppHandle) {
+    use tauri_plugin_dialog::DialogExt;
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let picked = app
+            .dialog()
+            .file()
+            .add_filter("图片", &["png", "jpg", "jpeg", "webp", "gif", "bmp"])
+            .blocking_pick_file();
+        if let Some(file) = picked {
+            if let Ok(src) = file.into_path() {
+                if let Ok(dir) = app.path().app_data_dir() {
+                    let _ = std::fs::create_dir_all(&dir);
+                    let dst = dir.join("avatar.png");
+                    if std::fs::copy(&src, &dst).is_ok() {
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.emit("avatar-updated", ());
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+#[tauri::command]
+fn get_avatar_base64(app: tauri::AppHandle) -> Result<String, String> {
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let path = dir.join("avatar.png");
+    if !path.exists() {
+        return Ok(String::new());
+    }
+    let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
+    let b64 = base64::engine::general_purpose::STANDARD.encode(bytes);
+    Ok(format!("data:image/png;base64,{b64}"))
+}
+
 #[tauri::command]
 async fn ask_llm(history: Vec<serde_json::Value>, app: tauri::AppHandle) -> Result<String, String> {
     let cfg = read_config(&app)?;
@@ -116,6 +155,7 @@ async fn ask_llm(history: Vec<serde_json::Value>, app: tauri::AppHandle) -> Resu
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let settings_item = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
             let upload_item = MenuItem::with_id(app, "upload", "更换头像", true, None::<&str>)?;
@@ -128,16 +168,19 @@ pub fn run() {
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "settings" => open_settings(app),
-                    "upload" => {
-                        // 预留：选择图片设为头像
-                    }
+                    "upload" => pick_avatar(app),
                     "quit" => app.exit(0),
                     _ => {}
                 })
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ask_llm, get_config, save_config])
+        .invoke_handler(tauri::generate_handler![
+            ask_llm,
+            get_config,
+            save_config,
+            get_avatar_base64
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
