@@ -30,11 +30,11 @@ class MarkdownConverter {
   _initTables() {
     const greekPairs = [
       ['\\alpha', '\u03b1'], ['\\beta', '\u03b2'], ['\\gamma', '\u03b3'], ['\\delta', '\u03b4'],
-      ['\\epsilon', '\u03b5'], ['\\varepsilon', '\u03b5'], ['\\zeta', '\u03b6'], ['\\eta', '\u03b7'],
-      ['\\theta', '\u03b8'], ['\\vartheta', '\u03b8'], ['\\iota', '\u03b9'], ['\\kappa', '\u03ba'],
+      ['\\epsilon', '\u03b5'], ['\\varepsilon', '\u03f5'], ['\\zeta', '\u03b6'], ['\\eta', '\u03b7'],
+      ['\\theta', '\u03b8'], ['\\vartheta', '\u03d1'], ['\\iota', '\u03b9'], ['\\kappa', '\u03ba'],
       ['\\lambda', '\u03bb'], ['\\mu', '\u03bc'], ['\\nu', '\u03bd'], ['\\xi', '\u03be'], ['\\pi', '\u03c0'],
-      ['\\rho', '\u03c1'], ['\\sigma', '\u03c3'], ['\\tau', '\u03c4'], ['\\upsilon', '\u03c5'],
-      ['\\phi', '\u03c6'], ['\\varphi', '\u03c6'], ['\\chi', '\u03c7'], ['\\psi', '\u03c8'], ['\\omega', '\u03c9'],
+      ['\\rho', '\u03c1'], ['\\sigma', '\u03c3'], ['\\varsigma', '\u03c2'], ['\\tau', '\u03c4'], ['\\upsilon', '\u03c5'],
+      ['\\phi', '\u03c6'], ['\\varphi', '\u03d5'], ['\\chi', '\u03c7'], ['\\psi', '\u03c8'], ['\\omega', '\u03c9'],
       ['\\Gamma', '\u0393'], ['\\Delta', '\u0394'], ['\\Theta', '\u0398'], ['\\Lambda', '\u039b'],
       ['\\Xi', '\u039e'], ['\\Pi', '\u03a0'], ['\\Sigma', '\u03a3'], ['\\Upsilon', '\u03a5'],
       ['\\Phi', '\u03a6'], ['\\Psi', '\u03a8'], ['\\Omega', '\u03a9']
@@ -55,8 +55,18 @@ class MarkdownConverter {
       ['\\Leftarrow', '\u21d0'], ['\\leftrightarrow', '\u2194'], ['\\mapsto', '\u21a6'], ['\\to', '\u2192'],
       ['\\therefore', '\u2234'], ['\\because', '\u2235'], ['\\sim', '~'], ['\\simeq', '\u2243'],
       ['\\cong', '\u2245'], ['\\angle', '\u2220'], ['\\perp', '\u22a5'], ['\\parallel', '\u2225'],
+      ['\\Leftrightarrow', '\u21d4'], ['\\iff', '\u21d4'], ['\\implies', '\u21d2'], ['\\gets', '\u2190'],
+      ['\\uparrow', '\u2191'], ['\\downarrow', '\u2193'], ['\\nearrow', '\u2197'], ['\\searrow', '\u2198'],
+      ['\\emptyset', '\u2205'], ['\\varnothing', '\u2205'],
+      ['\\mid', '|'], ['\\nmid', '\u2224'], ['\\vert', '|'], ['\\Vert', '\u2016'], ['\\lvert', '|'],
+      ['\\rvert', '|'], ['\\lVert', '\u2016'], ['\\rVert', '\u2016'],
+      ['\\ll', '\u226a'], ['\\gg', '\u226b'], ['\\leqslant', '\u2264'], ['\\geqslant', '\u2265'],
+      ['\\subsetneq', '\u228a'], ['\\supsetneq', '\u228b'], ['\\setminus', '\\'], ['\\backslash', '\\'],
+      ['\\oplus', '\u2295'], ['\\ominus', '\u2296'], ['\\odot', '\u2299'], ['\\infty', '\u221e'],
+      ['\\aleph', '\u2135'], ['\\Re', '\u211c'], ['\\Im', '\u2111'], ['\\ell', '\u2113'],
       ['\\degree', '\u00b0'], ['\\prime', '\u2032'], ['\\hbar', '\u210f'], ['\\ldots', '\u2026'],
-      ['\\cdots', '\u2026'], ['\\dots', '\u2026'], ['\\quad', ' '], ['\\qquad', '  '],
+      ['\\cdots', '\u2026'], ['\\dots', '\u2026'], ['\\vdots', '\u22ee'], ['\\ddots', '\u22f1'],
+      ['\\quad', ' '], ['\\qquad', '  '],
       ['\\;', ' '], ['\\:', ' '], ['\\ ', ' '],
       ['\\%', '%'], ['\\$', '$'], ['\\&', '&'], ['\\_', '_'], ['\\{', '{'], ['\\}', '}'],
       ['\\#', '#'], ['\\left', ''], ['\\right', '']
@@ -233,9 +243,9 @@ class MarkdownConverter {
           const k = j + (rest.length - stripped.length);
           if (cmd === '\\begin') {
             const envM = /\{([a-zA-Z*]+)\}/.exec(stripped);
-            if (envM !== null && (envM[1] === 'matrix' || envM[1] === 'cases' ||
-              envM[1] === 'aligned' || envM[1] === 'align')) {
-              return this._latexEnv(src, k + envM[0].length, n, envM[1]);
+            const env = envM === null ? null : this._normalizeEnv(envM[1]);
+            if (env !== null) {
+              return this._latexEnv(src, k + envM[0].length, n, env);
             }
           }
           out.push(cmd);
@@ -462,10 +472,40 @@ class MarkdownConverter {
     return s.replace(/\s*([^\w\s])\s*/g, '$1');
   }
 
+  /**
+   * 环境名归一化。返回规范名，不认识的返回 null。
+   * pmatrix/bmatrix/Bmatrix/vmatrix/Vmatrix 都是 matrix 的边框变体，
+   * 纯文本里边框没法表达，一律按 matrix 处理。
+   */
+  _normalizeEnv(name) {
+    if (name === 'cases') return 'cases';
+    if (name === 'aligned' || name === 'align' || name === 'align*' ||
+        name === 'alignedat' || name === 'split' || name === 'gathered') {
+      return 'aligned';
+    }
+    // matrix 家族：matrix / pmatrix / bmatrix / Bmatrix / vmatrix / Vmatrix / smallmatrix
+    if (/^(small)?[pbBvV]?matrix$/.test(name)) return 'matrix';
+    return null;
+  }
+
   /** 环境解析：matrix/cases 分列，aligned/align 去对齐标记 */
   _latexEnv(src, i, n, envName) {
     const endMarker = '\\end{' + envName + '}';
-    const e = src.indexOf(endMarker, i);
+    // 源文里的结束标记可能是 pmatrix/bmatrix 等变体名，逐个试
+    const endCandidates = [endMarker];
+    for (const v of ['pmatrix', 'bmatrix', 'Bmatrix', 'vmatrix', 'Vmatrix',
+      'smallmatrix', 'align*', 'alignedat', 'split', 'gathered']) {
+      endCandidates.push('\\end{' + v + '}');
+    }
+    let e = -1;
+    let hitLen = 0;
+    for (const cand of endCandidates) {
+      const at = src.indexOf(cand, i);
+      if (at !== -1 && (e === -1 || at < e)) {
+        e = at;
+        hitLen = cand.length;
+      }
+    }
     let body = '';
     let rest = '';
     if (e === -1) {
@@ -473,7 +513,7 @@ class MarkdownConverter {
       rest = '';
     } else {
       body = src.substring(i, e);
-      rest = src.substring(e + endMarker.length);
+      rest = src.substring(e + hitLen);
     }
     const rows = [];
     const rowParts = body.split('\\\\');
