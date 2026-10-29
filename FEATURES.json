@@ -1,0 +1,29 @@
+{
+  "_说明": "功能清单。只改 passes 字段，不许删条目。此仓库已归档，不再新增功能。",
+  "features": [
+    {
+      "category": "engine",
+      "description": "与 jingshi-pc 保持同一份 LaTeX 转纯文本引擎",
+      "steps": ["对比两端 engine/jingshi.js 的 md5", "两端都跑 test.js", "均通过且 md5 一致"],
+      "passes": true
+    },
+    {
+      "category": "engine",
+      "description": "测试文件与 jingshi-pc 同源，28 例",
+      "steps": ["运行 node engine/test.js", "输出 28/28"],
+      "passes": true
+    },
+    {
+      "category": "pet",
+      "description": "桌宠托盘头像更换（文件对话框选图 → 存本地 → 显示）",
+      "steps": ["点托盘菜单", "选本地图片", "桌宠头像更新", "重启后仍保持"],
+      "passes": true
+    },
+    {
+      "category": "pet",
+      "description": "桌面宠物本体动画与交互",
+      "steps": ["启动程序", "桌宠显示在桌面", "能拖动", "有动画"],
+      "passes": true
+    }
+  ]
+}
